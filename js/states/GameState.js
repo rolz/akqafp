@@ -3,13 +3,11 @@ var GameState = function(game) {
     State.call(this, game);
 };
 
-
+// these are not doing anything now
 GameState.prototype = Object.create(State.prototype);
 GameState.prototype.constructor = GameState;
 
-
 GameState.prototype = {
-
 
     _initScene : function() {
 
@@ -18,6 +16,9 @@ GameState.prototype = {
         scene.setGravity(new BABYLON.Vector3(0, -20, 0)); //this controls forces.
         scene.checkCollisions = true;
         scene.collisionsEnabled = true;
+
+        // set debug
+        scene.debugLayer.show();
 
         // Camera attached to the canvas
         var camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,45,-180), scene);
