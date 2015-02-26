@@ -1,0 +1,25 @@
+{
+  "name": "fp",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rolz/akqafp.git"
+  },
+  "author": "Zac Rolland",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rolz/akqafp/issues"
+  },
+  "homepage": "https://github.com/rolz/akqafp",
+  "devDependencies": {
+    "gulp": "^3.8.11",
+    "gulp-plumber": "^0.6.6",
+    "gulp-webserver": "^0.9.0",
+    "opn": "^1.0.1"
+  }
+}

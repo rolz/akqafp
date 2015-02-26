@@ -149,7 +149,7 @@ var Player = function(game, scene, gamepad) {
                     var thisCup = that.cups[i];
                     if (that.gameMode) {
                         that.gameMode = false;
-                        console.log("hello");
+                    
                         setTimeout(function() {
 
                             // destoy ball
