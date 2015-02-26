@@ -7,7 +7,7 @@ var Player = function(game, scene, gamepad) {
     this.startPos = this.camera.position;
     this.ball = null;
     this.ballCount = 0;
-    var cup1, cup2, cup3, cup4, cup5, cup6;
+    this.cups = [];
     var score = 0;
 
     /*************************************/
@@ -19,13 +19,107 @@ var Player = function(game, scene, gamepad) {
 
     BABYLON.SceneLoader.ImportMesh("Cube.000", "assets/", "boxCup.babylon", this.scene, function (newMeshes) {
         console.log(newMeshes);
-        cup1 = that.createCup(newMeshes[0], newMeshes[1], newMeshes[2], newMeshes[3], newMeshes[4], 0, 0.5, 0);
+
+        var parent = newMeshes[0],
+            c1     = newMeshes[1],
+            c2     = newMeshes[2],
+            c3     = newMeshes[3],
+            c4     = newMeshes[4];
+
+        parent.isVisible = false;
+        c1.isVisible     = false;
+        c2.isVisible     = false;
+        c3.isVisible     = false;
+        c4.isVisible     = false;
+
+        PARENT_MODEL = parent;
+        C1_MODEL     = c1;
+        C2_MODEL     = c2;
+        C3_MODEL     = c3;
+        C4_MODEL     = c4;
+
+        var scalings = {
+            pX: 5,
+            pY: 0.5,
+            pZ: 5,
+            c1X: 0.5,
+            c1Y: 5,
+            c1Z: 5,
+            c2X: 5,
+            c2Y: 5,
+            c2Z: 0.5,
+            c3X: 5,
+            c3Y: 5,
+            c3Z: 0.5,
+            c4X: 0.5,
+            c4Y: 5,
+            c4Z: 5
+        }
+
+        var positions = {
+            pX: 0,
+            pY: 0.5,
+            pZ: 0,
+            c1X: 5.5,
+            c1Y: 5,
+            c1Z: 0,
+            c2X: 0,
+            c2Y: 5,
+            c2Z: -5.5,
+            c3X: 0,
+            c3Y: 5,
+            c3Z: 5.5,
+            c4X: -5.5,
+            c4Y: 5,
+            c4Z: 0
+        }
+
+        var positions2 = {
+            pX: -20,
+            pY: 0.5,
+            pZ: 0,
+            c1X: -14.5,
+            c1Y: 5,
+            c1Z: 0,
+            c2X: -20,
+            c2Y: 5,
+            c2Z: -5.5,
+            c3X: -20,
+            c3Y: 5,
+            c3Z: 5.5,
+            c4X: -25.5,
+            c4Y: 5,
+            c4Z: 0
+        }
+
+        var positions3 = {
+            pX: 20,
+            pY: 0.5,
+            pZ: 0,
+            c1X: 25.5,
+            c1Y: 5,
+            c1Z: 0,
+            c2X: 20,
+            c2Y: 5,
+            c2Z: -5.5,
+            c3X: 20,
+            c3Y: 5,
+            c3Z: 5.5,
+            c4X: 14.5,
+            c4Y: 5,
+            c4Z: 0
+        }
+
+        that.createCup(1,scalings, positions);
+        that.createCup(2,scalings, positions2);
+        that.createCup(3,scalings, positions3);
+
     });
 
     /* GAMEPAD*/
     this.scene.registerBeforeRender(function() {
 
-        if (that.ball && that.cupParentMesh) {
+        if (that.ball && that.cups) {
 
         /* TRY AND FIGURE OUT HOW TO MAKE THE BOX MESHES MERGE ON PHYSICS MOVE */
         // if (that.ball && that.cupParentMesh && that.rightSide && that.frontSide && that.backSide && that.leftSide) {
@@ -47,24 +141,35 @@ var Player = function(game, scene, gamepad) {
         //         console.log("hello");
         //     }
 
+            for (var i=0; i < that.cups.length; i++) {
 
-            // if ball touches bottom of box get a point and destroy ball
-            if (that.ball.intersectsMesh(that.cupParentMesh, true)) {
+                // if ball touches bottom of box get a point and destroy ball
+                if (that.ball.intersectsMesh(that.cups[i][0], true)) {
+                    // only allows ball to be detected once in cup
+                    var thisCup = that.cups[i];
+                    if (that.gameMode) {
+                        that.gameMode = false;
+                        console.log("hello");
+                        setTimeout(function() {
 
-                // only allows ball to be detected once in cup
-                if (that.gameMode) {
-                    that.gameMode = false;
+                            // destoy ball
+                            that.destroy(that.ball);
 
-                    setTimeout(function() {
-                        that.destroy(that.ball);
-                        that.destroy(that.cupParentMesh);
-                        score++;
-                        document.getElementById('count').innerHTML = score;
-                    }, 1000);
+                            // loop over array and destroy all cup sides
+                            for(var j = 0; j < thisCup.length; j++) {
+                                that.destroy(thisCup[j]);
+                            }
+
+                            // add score
+                            score++;
+                            document.getElementById('count').innerHTML = score;
+                        }, 1000);
+
+                    }
 
                 }
-
             }
+
 
         }
 
@@ -148,33 +253,71 @@ Player.prototype = {
     	this.direction = BABYLON.Vector3.TransformNormal(new BABYLON.Vector3(0, 0, 12), inView);
     },
 
-    createCup: function (parent,c1,c2,c3,c4, x, y, z) {
+    /*
+        params: cup number,the cup scale, and the cup position
+    */
+    createCup: function (num, scale, pos) {
 
-        this.cupParentMesh = parent;
-        this.cupParentMesh.position = new BABYLON.Vector3(x, y, z);
-        this.cupParentMesh.scaling = new BABYLON.Vector3(5, 0.5, 5);
+        //PARENT
+        // Create a clone of our template
+        var parent = PARENT_MODEL.clone(PARENT_MODEL.name);
+        parent.id = PARENT_MODEL.name+(this.cups.length+1);
+        parent.isVisible = true;
+        parent.scaling = new BABYLON.Vector3(scale.pX,scale.pY,scale.pZ);
+        parent.position = new BABYLON.Vector3(pos.pX,pos.pY,pos.pZ);
 
-        this.cupParentMesh.setPhysicsState(BABYLON.PhysicsEngine.BoxImpostor, {
+        parent.setPhysicsState(BABYLON.PhysicsEngine.BoxImpostor, {
             mass: 1,
             friction: 0.1,
             restitution: 0.1
         });
 
-        var rightSide = c1;
-        frontSide = c2;
-        backSide = c3;
-        leftSide = c4;
+        if(parent) {
+            // CHILDREN
 
-        var physics = {
-            mass: 25, // how fast wall fall down
-            friction: 0.01,
-            restitution: 0.01
+            // TODO: Figure out which side is which!
+
+            var rightSide = C1_MODEL.clone(C1_MODEL.name),
+                frontSide = C2_MODEL.clone(C2_MODEL.name),
+                backSide = C3_MODEL.clone(C3_MODEL.name),
+                leftSide = C4_MODEL.clone(C4_MODEL.name);
+
+            rightSide.scaling = new BABYLON.Vector3(scale.c1X,scale.c1Y,scale.c1Z);
+            frontSide.scaling = new BABYLON.Vector3(scale.c2X,scale.c2Y,scale.c2Z);
+            backSide.scaling = new BABYLON.Vector3(scale.c3X,scale.c3Y,scale.c3Z);
+            leftSide.scaling = new BABYLON.Vector3(scale.c4X,scale.c4Y,scale.c4Z);
+
+            rightSide.position = new BABYLON.Vector3(pos.c1X,pos.c1Y,pos.c1Z);
+            frontSide.position = new BABYLON.Vector3(pos.c2X,pos.c2Y,pos.c2Z);
+            backSide.position = new BABYLON.Vector3(pos.c3X,pos.c3Y,pos.c3Z);
+            leftSide.position = new BABYLON.Vector3(pos.c4X,pos.c4Y,pos.c4Z);
+
+            rightSide.isVisible = true;
+            frontSide.isVisible = true;
+            backSide.isVisible = true;
+            leftSide.isVisible = true;
+
+            var childPhysics = {
+                mass: 25, // how fast wall fall down
+                friction: 0.01,
+                restitution: 0.01
+            }
+
+            rightSide.setPhysicsState(BABYLON.PhysicsEngine.BoxImpostor, childPhysics);
+            frontSide.setPhysicsState(BABYLON.PhysicsEngine.BoxImpostor, childPhysics);
+            backSide.setPhysicsState(BABYLON.PhysicsEngine.BoxImpostor, childPhysics);
+            leftSide.setPhysicsState(BABYLON.PhysicsEngine.BoxImpostor, childPhysics);
+
+            // define the whole cup and push it into cup array
+            var cup = [parent,rightSide,frontSide,backSide,leftSide];
+            this.cups.push(cup);
+            console.log(this.cups);
         }
 
-        rightSide.setPhysicsState(BABYLON.PhysicsEngine.BoxImpostor, physics);
-        frontSide.setPhysicsState(BABYLON.PhysicsEngine.BoxImpostor, physics);
-        backSide.setPhysicsState(BABYLON.PhysicsEngine.BoxImpostor, physics);
-        leftSide.setPhysicsState(BABYLON.PhysicsEngine.BoxImpostor, physics);
+
+
+
+
 
     },
 
